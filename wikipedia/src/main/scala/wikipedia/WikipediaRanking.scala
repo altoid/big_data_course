@@ -11,7 +11,7 @@ case class WikipediaArticle(title: String, text: String) {
     * @return Whether the text of this article mentions `lang` or not
     * @param lang Language to look for (e.g. "Scala")
     */
-  def mentionsLanguage(lang: String): Boolean = text.split(' ').contains(lang)
+  def mentionsLanguage(lang: String): Boolean = text.toLowerCase.split(' ').contains(lang.toLowerCase)
 }
 
 object WikipediaRanking {
@@ -24,7 +24,7 @@ object WikipediaRanking {
   val sc: SparkContext = new SparkContext(conf)
 
   // Hint: use a combination of `sc.textFile`, `WikipediaData.filePath` and `WikipediaData.parse`
-  // the file is one article per line.  textfile returns the file as a collection of lines.
+  // the file is one article per line.  textFile returns the file as a collection of lines.
   val wikiRdd: RDD[WikipediaArticle] = sc.textFile(WikipediaData.filePath).map(WikipediaData.parse(_))
 
   /** Returns the number of articles on which the language `lang` occurs.
@@ -33,7 +33,8 @@ object WikipediaRanking {
    */
   def occurrencesOfLang(lang: String, rdd: RDD[WikipediaArticle]): Int = {
     // !!
-    rdd.filter(_.text.toLowerCase.split(" ").contains(lang.toLowerCase)).count().toInt
+    // rdd.filter(_.text.toLowerCase.split(" ").contains(lang.toLowerCase)).count().toInt
+    rdd.filter(article => article.mentionsLanguage(lang)).count.toInt
   }
 
   /* (1) Use `occurrencesOfLang` to compute the ranking of the languages
@@ -51,7 +52,15 @@ object WikipediaRanking {
   /* Compute an inverted index of the set of articles, mapping each language
    * to the Wikipedia pages in which it occurs.
    */
-  def makeIndex(langs: List[String], rdd: RDD[WikipediaArticle]): RDD[(String, Iterable[WikipediaArticle])] = ???
+  def makeIndex(langs: List[String], rdd: RDD[WikipediaArticle]): RDD[(String, Iterable[WikipediaArticle])] = {
+    val inverseMap = rdd.flatMap(
+      article => {
+        val blurbs = langs.filter(lang => article.mentionsLanguage(lang))
+        blurbs.map(lang => (lang, article))
+      }
+    )
+    inverseMap.groupByKey()
+  }
 
   /* (2) Compute the language ranking again, but now using the inverted index. Can you notice
    *     a performance improvement?

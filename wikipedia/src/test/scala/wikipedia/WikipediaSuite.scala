@@ -102,21 +102,21 @@ class WikipediaSuite extends FunSuite with BeforeAndAfterAll {
     assert(res)
   }
 
-//  ignore("'makeIndex' creates a simple index with two entries") {
-//    assert(initializeWikipediaRanking(), " -- did you fill in all the values in WikipediaRanking (conf, sc, wikiRdd)?")
-//    import WikipediaRanking._
-//    val langs = List("Scala", "Java")
-//    val articles = List(
-//        WikipediaArticle("1","Groovy is pretty interesting, and so is Erlang"),
-//        WikipediaArticle("2","Scala and Java run on the JVM"),
-//        WikipediaArticle("3","Scala is not purely functional")
-//      )
-//    val rdd = sc.parallelize(articles)
-//    val index = makeIndex(langs, rdd)
-//    val res = index.count() == 2
-//    assert(res)
-//  }
-//
+  test("'makeIndex' creates a simple index with two entries") {
+    assert(initializeWikipediaRanking(), " -- did you fill in all the values in WikipediaRanking (conf, sc, wikiRdd)?")
+    import WikipediaRanking._
+    val langs = List("Scala", "Java")
+    val articles = List(
+        WikipediaArticle("I","Groovy is pretty interesting, and so is Erlang"),
+        WikipediaArticle("II","Scala and Java run on the JVM"),
+        WikipediaArticle("III","Scala is not purely functional")
+      )
+    val rdd = sc.parallelize(articles)
+    val index = makeIndex(langs, rdd)
+    val res = index.count() == 2
+    assert(res)
+  }
+
 //  ignore("'rankLangsUsingIndex' should work for a simple RDD with three elements") {
 //    assert(initializeWikipediaRanking(), " -- did you fill in all the values in WikipediaRanking (conf, sc, wikiRdd)?")
 //    import WikipediaRanking._
