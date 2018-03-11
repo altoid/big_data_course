@@ -60,6 +60,7 @@ object WikipediaRanking {
       }
     )
     inverseMap.groupByKey()
+    // map, flatMap and groupByKey are transformations.
   }
 
   /* (2) Compute the language ranking again, but now using the inverted index. Can you notice
@@ -79,7 +80,16 @@ object WikipediaRanking {
    *   Note: this operation is long-running. It can potentially run for
    *   several seconds.
    */
-  def rankLangsReduceByKey(langs: List[String], rdd: RDD[WikipediaArticle]): List[(String, Int)] = ???
+  def rankLangsReduceByKey(langs: List[String], rdd: RDD[WikipediaArticle]): List[(String, Int)] = {
+    val inverseMap = rdd.flatMap(
+      article => {
+        val blurbs = langs.filter(lang => article.mentionsLanguage(lang))
+        blurbs.map(lang => (lang, article))
+      }
+    )
+    val articleCount: RDD[(String, Int)] = inverseMap.mapValues(article => 1)
+    articleCount.reduceByKey((x, y) => x + y).sortBy(_._2, ascending = false).collect().toList
+  }
 
   def main(args: Array[String]) {
 
