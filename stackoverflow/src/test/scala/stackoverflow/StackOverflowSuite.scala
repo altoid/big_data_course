@@ -26,7 +26,7 @@ class StackOverflowSuite extends FunSuite with BeforeAndAfterAll {
     override def kmeansMaxIterations = 120
   }
 
-  test("testObject can be instantiated") {
+  ignore("testObject can be instantiated") {
     val instantiatable = try {
       testObject
       true
@@ -55,8 +55,20 @@ class StackOverflowSuite extends FunSuite with BeforeAndAfterAll {
     rdd.collect().foreach(println)
   }
 
-  test("groupedPostingsTest") {
+  test("scoredPostingsTest") {
     import StackOverflow._
+
+    def answerHighScore(as: Array[Answer]): HighScore = {
+      var highScore = 0
+      var i = 0
+      while (i < as.length) {
+        val score = as(i).score
+        if (score > highScore)
+          highScore = score
+        i += 1
+      }
+      highScore
+    }
 
     val postings = List(
       Posting(1, 27233496, None, None, 0, Some("C#")),
@@ -76,7 +88,25 @@ class StackOverflowSuite extends FunSuite with BeforeAndAfterAll {
     // there is no span() on rdds so we have to filter twice.
     // should be ok since we cached.
 
-    val qa_rdd = groupedPostings(rdd)
+    val qa_rdd: RDD[(QID, Iterable[(Question, Answer)])] = groupedPostings(rdd)
     qa_rdd.collect.foreach(println)
+
+    val z: RDD[(Question, Iterable[Answer])] = qa_rdd.flatMap(_._2).groupByKey()
+
+    println("=========================")
+    z.collect.foreach(println)
+
+//    (Posting(1,9002525,None,None,2,Some(C++)),CompactBuffer(Posting(2,9003401,None,Some(9002525),4,None), Posting(2,9003942,None,Some(9002525),1,None), Posting(2,9005311,None,Some(9002525),0,None)))
+//    (Posting(1,5484340,None,None,0,Some(C#)),CompactBuffer(Posting(2,5494879,None,Some(5484340),1,None)))
+
+    // want:  RDD[(Question, HighScore)]
+    val w: RDD[(Question, HighScore)] = z.mapValues(i => answerHighScore(i.toArray))
+
+    println("==================")
+    w.collect.foreach(println)
+
+    val scored = scoredPostings(qa_rdd)
+    println("==================")
+    scored.collect.foreach(println)
   }
 }

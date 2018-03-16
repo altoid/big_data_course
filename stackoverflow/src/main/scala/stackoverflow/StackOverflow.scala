@@ -90,17 +90,21 @@ class StackOverflow extends Serializable {
 
     def answerHighScore(as: Array[Answer]): HighScore = {
       var highScore = 0
-          var i = 0
-          while (i < as.length) {
-            val score = as(i).score
-                if (score > highScore)
-                  highScore = score
-                  i += 1
-          }
+      var i = 0
+      while (i < as.length) {
+        val score = as(i).score
+        if (score > highScore)
+          highScore = score
+        i += 1
+      }
       highScore
     }
 
-    ???
+    def answerHighScore2(as: Array[Answer]): HighScore = as.map(_.score).max
+
+      grouped.flatMap(_._2)
+      .groupByKey()
+      .mapValues(i => answerHighScore2(i.toArray))
   }
 
 
