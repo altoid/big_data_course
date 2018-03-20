@@ -9,7 +9,7 @@ import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 import java.io.File
 
-import stackoverflow.StackOverflow.sc
+import stackoverflow.StackOverflow._
 
 @RunWith(classOf[JUnitRunner])
 class StackOverflowSuite extends FunSuite with BeforeAndAfterAll {
@@ -110,7 +110,7 @@ class StackOverflowSuite extends FunSuite with BeforeAndAfterAll {
     scored.collect.foreach(println)
   }
 
-  test("vectorPostingsTest") {
+  ignore("vectorPostingsTest") {
     import StackOverflow._
 
     def firstLangInTag(tag: Option[String], ls: List[String]): Option[Int] = {
@@ -149,5 +149,16 @@ class StackOverflowSuite extends FunSuite with BeforeAndAfterAll {
     )
 
     assert(result === test)
+  }
+
+  test("vector Postings test 2") {
+    import StackOverflow._
+
+    val lines   = sc.textFile("src/main/resources/stackoverflow/stackoverflow.csv")
+    val raw     = rawPostings(lines)
+    val grouped = groupedPostings(raw)
+    val scored  = scoredPostings(grouped)
+    val vectors = vectorPostings(scored)
+    assert(vectors.count() == 2121822, "Incorrect number of vectors: " + vectors.count())
   }
 }
