@@ -111,7 +111,7 @@ class StackOverflow extends Serializable {
   /** Compute the vectors for the kmeans */
   def vectorPostings(scored: RDD[(Question, HighScore)]): RDD[(LangIndex, HighScore)] = {
     /** Return optional index of first language that occurs in `tags`. */
-    def firstLangInTag(tag: Option[String], ls: List[String]): Option[Int] = {
+    def firstLangInTag_orig(tag: Option[String], ls: List[String]): Option[Int] = {
       if (tag.isEmpty) None
       else if (ls.isEmpty) None
       else if (tag.get == ls.head) Some(0) // index: 0
@@ -124,7 +124,25 @@ class StackOverflow extends Serializable {
       }
     }
 
-    ???
+    def firstLangInTag(tag: Option[String], ls: List[String]): Option[Int] = {
+      tag match {
+        case Some(x) => {
+          val idx = ls.indexOf(x)
+          if (idx >= 0) Some(idx)
+          else None
+        }
+        case None => None
+      }
+    }
+
+    scored.map(p => {
+      val idx = firstLangInTag(p._1.tags, langs)
+      val x: Int = idx match {
+        case None => 0
+        case Some(y) => y
+      }
+      (langSpread * x, p._2)
+    })
   }
 
 

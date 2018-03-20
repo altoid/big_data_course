@@ -55,7 +55,7 @@ class StackOverflowSuite extends FunSuite with BeforeAndAfterAll {
     rdd.collect().foreach(println)
   }
 
-  test("scoredPostingsTest") {
+  ignore("scoredPostingsTest") {
     import StackOverflow._
 
     def answerHighScore(as: Array[Answer]): HighScore = {
@@ -105,8 +105,49 @@ class StackOverflowSuite extends FunSuite with BeforeAndAfterAll {
     println("==================")
     w.collect.foreach(println)
 
-    val scored = scoredPostings(qa_rdd)
+    val scored: RDD[(Question, HighScore)] = scoredPostings(qa_rdd)
     println("==================")
     scored.collect.foreach(println)
+  }
+
+  test("vectorPostingsTest") {
+    import StackOverflow._
+
+    def firstLangInTag(tag: Option[String], ls: List[String]): Option[Int] = {
+      if (tag.isEmpty) None
+      else if (ls.isEmpty) None
+      else if (tag.get == ls.head) Some(0) // index: 0
+      else {
+        val tmp = firstLangInTag(tag, ls.tail)
+        tmp match {
+          case None => None
+          case Some(i) => Some(i + 1) // index i in ls.tail => index i+1
+        }
+      }
+    }
+
+    val scored: List[(Question, HighScore)] = List(
+      (Posting(1, 6, None, None, 140, Some("CSS")), 67),
+      (Posting(1, 42, None, None, 155, Some("PHP")), 89),
+      (Posting(1, 72, None, None, 16, Some("Ruby")), 3),
+      (Posting(1, 126, None, None, 33, Some("Java")), 30),
+      (Posting(1, 174, None, None, 38, Some("C#")), 20)
+    )
+
+    val rdd: RDD[(Question, HighScore)] = sc.parallelize(scored)
+
+    val vectors: RDD[(LangIndex, HighScore)] = vectorPostings(rdd)
+
+    val result: List[(LangIndex, HighScore)] = vectors.collect.toList
+
+    val test: List[(LangIndex, HighScore)] = List(
+      (350000, 67),
+      (100000, 89),
+      (300000, 3),
+      (50000, 30),
+      (200000, 20)
+    )
+
+    assert(result === test)
   }
 }
