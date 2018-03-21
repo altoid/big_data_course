@@ -151,7 +151,7 @@ class StackOverflowSuite extends FunSuite with BeforeAndAfterAll {
     assert(result === test)
   }
 
-  test("vector Postings test 2") {
+  ignore("vector Postings test 2") {
     import StackOverflow._
 
     val lines   = sc.textFile("src/main/resources/stackoverflow/stackoverflow.csv")

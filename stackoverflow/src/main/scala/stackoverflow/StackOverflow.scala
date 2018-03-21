@@ -1,9 +1,9 @@
 package stackoverflow
 
-import org.apache.spark.SparkConf
-import org.apache.spark.SparkContext
+import org.apache.spark.{HashPartitioner, SparkConf, SparkContext}
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
+
 import annotation.tailrec
 import scala.reflect.ClassTag
 
@@ -28,8 +28,8 @@ object StackOverflow extends StackOverflow {
 //    assert(vectors.count() == 2121822, "Incorrect number of vectors: " + vectors.count())
 
     val means   = kmeans(sampleVectors(vectors), vectors, debug = true)
-    val results = clusterResults(means, vectors)
-    printResults(results)
+//    val results = clusterResults(means, vectors)
+//    printResults(results)
   }
 }
 
@@ -111,18 +111,18 @@ class StackOverflow extends Serializable {
   /** Compute the vectors for the kmeans */
   def vectorPostings(scored: RDD[(Question, HighScore)]): RDD[(LangIndex, HighScore)] = {
     /** Return optional index of first language that occurs in `tags`. */
-    def firstLangInTag_orig(tag: Option[String], ls: List[String]): Option[Int] = {
-      if (tag.isEmpty) None
-      else if (ls.isEmpty) None
-      else if (tag.get == ls.head) Some(0) // index: 0
-      else {
-        val tmp = firstLangInTag(tag, ls.tail)
-        tmp match {
-          case None => None
-          case Some(i) => Some(i + 1) // index i in ls.tail => index i+1
-        }
-      }
-    }
+//    def firstLangInTag_orig(tag: Option[String], ls: List[String]): Option[Int] = {
+//      if (tag.isEmpty) None
+//      else if (ls.isEmpty) None
+//      else if (tag.get == ls.head) Some(0) // index: 0
+//      else {
+//        val tmp = firstLangInTag(tag, ls.tail)
+//        tmp match {
+//          case None => None
+//          case Some(i) => Some(i + 1) // index i in ls.tail => index i+1
+//        }
+//      }
+//    }
 
     def firstLangInTag(tag: Option[String], ls: List[String]): Option[Int] = {
       tag match {
@@ -142,11 +142,14 @@ class StackOverflow extends Serializable {
         case Some(y) => y
       }
       (langSpread * x, p._2)
-    })
+    }).partitionBy(new HashPartitioner(langs.length)).persist()
   }
 
 
   /** Sample the vectors */
+  // this is the initialization step that starts the algorithm.
+  // return value is the initial set of k means (k == kmeansKernels).
+  // it's an array, not an RDD.
   def sampleVectors(vectors: RDD[(LangIndex, HighScore)]): Array[(Int, Int)] = {
 
     assert(kmeansKernels % langs.length == 0, "kmeansKernels should be a multiple of the number of languages studied.")
@@ -196,8 +199,18 @@ class StackOverflow extends Serializable {
   //
 
   /** Main kmeans computation */
-  @tailrec final def kmeans(means: Array[(Int, Int)], vectors: RDD[(Int, Int)], iter: Int = 1, debug: Boolean = false): Array[(Int, Int)] = {
+  @tailrec
+  final def kmeans(means: Array[(Int, Int)],
+                   vectors: RDD[(Int, Int)],
+                   iter: Int = 1,
+                   debug: Boolean = false): Array[(Int, Int)] = {
     val newMeans = means.clone() // you need to compute newMeans
+
+    vectors.map(v => (findClosest(v, means), v))
+      .groupByKey()  // (Int, Iterable[(Int, Int)])
+        .mapValues(averageVectors)  // (Int, (Int, Int))
+        .collect
+        .foreach(p => newMeans.update(p._1, p._2))
 
     // TODO: Fill in the newMeans array
     val distance = euclideanDistance(means, newMeans)
@@ -296,13 +309,13 @@ class StackOverflow extends Serializable {
   //
   //
   def clusterResults(means: Array[(Int, Int)], vectors: RDD[(LangIndex, HighScore)]): Array[(String, Double, Int, Int)] = {
-    val closest = vectors.map(p => (findClosest(p, means), p))
-    val closestGrouped = closest.groupByKey()
+    val closest: RDD[(Int, (LangIndex, HighScore))] = vectors.map(p => (findClosest(p, means), p))
+    val closestGrouped: RDD[(Int, Iterable[(LangIndex, HighScore)])] = closest.groupByKey()
 
-    val median = closestGrouped.mapValues { vs =>
+    val median = closestGrouped.mapValues { vs: Iterable[(LangIndex, HighScore)] =>
       val langLabel: String   = ??? // most common language in the cluster
       val langPercent: Double = ??? // percent of the questions in the most common language
-      val clusterSize: Int    = ???
+      val clusterSize: Int    = vs.size
       val medianScore: Int    = ???
 
       (langLabel, langPercent, clusterSize, medianScore)
