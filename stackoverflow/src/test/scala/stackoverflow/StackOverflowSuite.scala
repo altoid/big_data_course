@@ -151,6 +151,47 @@ class StackOverflowSuite extends FunSuite with BeforeAndAfterAll {
     assert(result === test)
   }
 
+  test("langlabel") {
+    val test: Iterable[(LangIndex, HighScore)] = List(
+      (350000, 67),
+      (350000, 67),
+      (100000, 89),
+      (350000, 67),
+      (100000, 89),
+      (300000, 3),
+      (350000, 67),
+      (100000, 89),
+      (300000, 3),
+      (50000, 30),
+      (350000, 67),
+      (100000, 89),
+      (300000, 3),
+      (50000, 30),
+      (200000, 20)
+    )
+
+    val x = test.map(t => (t._1 / langSpread, t._2)).groupBy(identity)
+    println(x)
+
+    val y = x.mapValues(_.size)
+    println(y)
+
+    val z = y.maxBy(_._2)
+    println(z)
+
+    val w = z._1._1
+    println(langs(w))
+
+    val altogether = test.map(t => (t._1 / langSpread, t._2))
+      .groupBy(identity)
+      .mapValues(_.size)
+      .maxBy(_._2)
+      ._1._1
+
+    println(altogether)
+
+  }
+
   ignore("vector Postings test 2") {
     import StackOverflow._
 

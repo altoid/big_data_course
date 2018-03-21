@@ -25,11 +25,11 @@ object StackOverflow extends StackOverflow {
     val grouped = groupedPostings(raw)
     val scored  = scoredPostings(grouped)
     val vectors = vectorPostings(scored)
-//    assert(vectors.count() == 2121822, "Incorrect number of vectors: " + vectors.count())
+    assert(vectors.count() == 2121822, "Incorrect number of vectors: " + vectors.count())
 
     val means   = kmeans(sampleVectors(vectors), vectors, debug = true)
-//    val results = clusterResults(means, vectors)
-//    printResults(results)
+    val results = clusterResults(means, vectors)
+    printResults(results)
   }
 }
 
@@ -313,10 +313,26 @@ class StackOverflow extends Serializable {
     val closestGrouped: RDD[(Int, Iterable[(LangIndex, HighScore)])] = closest.groupByKey()
 
     val median = closestGrouped.mapValues { vs: Iterable[(LangIndex, HighScore)] =>
-      val langLabel: String   = ??? // most common language in the cluster
-      val langPercent: Double = ??? // percent of the questions in the most common language
+
+      val commonestLang = vs.map(t => (t._1 / langSpread, t._2))
+        .groupBy(identity) // vs isn't an RDD, can't groupByKey on it.  groupBy returns a Map.
+        .mapValues(_.size)
+        .maxBy(_._2)  // ((index of commonest lang, high score), # occurrences in cluster)
+
+      val commonestLangIndex = commonestLang._1._1  // this can't possibly be good style.
+
+      val langLabel: String   = langs(commonestLangIndex) // most common language in the cluster
+      val langPercent: Double = (commonestLang._2 * 100.0) / vs.size // percent of the questions in the most common language
       val clusterSize: Int    = vs.size
-      val medianScore: Int    = ???
+
+      val sortedScores = vs.unzip._2.toArray.sorted
+      val midpoint = sortedScores.length / 2
+      val medianScore: Int =
+        if (sortedScores.length % 2 == 1) {
+          sortedScores(midpoint)
+        } else {
+          (sortedScores(midpoint) + sortedScores(midpoint - 1)) / 2
+        }
 
       (langLabel, langPercent, clusterSize, medianScore)
     }
