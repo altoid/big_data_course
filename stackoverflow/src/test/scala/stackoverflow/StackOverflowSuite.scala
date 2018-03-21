@@ -170,25 +170,34 @@ class StackOverflowSuite extends FunSuite with BeforeAndAfterAll {
       (200000, 20)
     )
 
-    val x = test.map(t => (t._1 / langSpread, t._2)).groupBy(identity)
-    println(x)
+//    val x = test.map(t => (t._1 / langSpread, t._2)).groupBy(identity)
+//    println(x)
+//
+//    val y = x.mapValues(_.size)
+//    println(y)
+//
+//    val z = y.maxBy(_._2)
+//    println(z)
+//
+//    val w = z._1._1
+//    println(langs(w))
 
-    val y = x.mapValues(_.size)
-    println(y)
-
-    val z = y.maxBy(_._2)
-    println(z)
-
-    val w = z._1._1
-    println(langs(w))
-
-    val altogether = test.map(t => (t._1 / langSpread, t._2))
+    val commonestLang = test.map(t => (t._1 / langSpread, t._2))
       .groupBy(identity)
       .mapValues(_.size)
       .maxBy(_._2)
-      ._1._1
 
-    println(altogether)
+    println(commonestLang)
+    val commonestLangIndex = commonestLang._1._1  // this can't possibly be good style.
+
+    println(commonestLangIndex)
+    //      val langPercent: Double = (commonestLang._2 * 100.0) / vs.size // percent of the questions in the most common language
+
+    val f = test.filter(_._1 == commonestLangIndex)
+    println(f)
+    val langPercent: Double = (test.filter(_._1 / langSpread == commonestLangIndex).size * 100.0) / test.size
+
+    println(langPercent)
 
   }
 

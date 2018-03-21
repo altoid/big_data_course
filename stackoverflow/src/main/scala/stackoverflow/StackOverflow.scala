@@ -322,7 +322,8 @@ class StackOverflow extends Serializable {
       val commonestLangIndex = commonestLang._1._1  // this can't possibly be good style.
 
       val langLabel: String   = langs(commonestLangIndex) // most common language in the cluster
-      val langPercent: Double = (commonestLang._2 * 100.0) / vs.size // percent of the questions in the most common language
+//      val langPercent: Double = (commonestLang._2 * 100.0) / vs.size // percent of the questions in the most common language
+      val langPercent: Double = (vs.filter(_._1 / langSpread == commonestLangIndex).size * 100.0) / vs.size
       val clusterSize: Int    = vs.size
 
       val sortedScores = vs.unzip._2.toArray.sorted
