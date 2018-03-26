@@ -5,14 +5,15 @@ import org.apache.spark.sql.types.{DoubleType, StringType, StructField, StructTy
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
-import timeusage.TimeUsage.{fsPath, spark}
+import timeusage.TimeUsage._
+import org.apache.spark.rdd.RDD
 
 import scala.util.Random
 
 @RunWith(classOf[JUnitRunner])
 class TimeUsageSuite extends FunSuite with BeforeAndAfterAll {
 
-  test("read file") {
+  test("prototype") {
     val resource = "/timeusage/atussum_100.csv"
     val rdd = spark.sparkContext.textFile(fsPath(resource))
 
@@ -20,12 +21,15 @@ class TimeUsageSuite extends FunSuite with BeforeAndAfterAll {
 
 //    println(headerColumns)
 
-    val stringColumn = headerColumns.head
-    val doubleColumns = headerColumns.tail
-    val fields = StructField(stringColumn, StringType, false) :: doubleColumns.map(c => StructField(c, DoubleType, false)).toList
+    val schema = dfSchema(headerColumns)
 
-    val result = StructType(fields)
-    println(result)
+    val data: RDD[String] = rdd.mapPartitionsWithIndex { (idx, iter) => if (idx == 0) iter.drop(1) else iter }
+
+    // data.collect.foreach(println)
+
+    val rows: Seq[Row] = data.map(r => Row.fromSeq(r.split(",").toList))
+
+    println(rows)
   }
 
 }
