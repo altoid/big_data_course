@@ -26,10 +26,10 @@ class TimeUsageSuite extends FunSuite with BeforeAndAfterAll {
     val data: RDD[String] = rdd.mapPartitionsWithIndex { (idx, iter) => if (idx == 0) iter.drop(1) else iter }
 
     // data.collect.foreach(println)
-
-    val rows: Seq[Row] = data.map(r => Row.fromSeq(r.split(",").toList))
-
-    println(rows)
+    val (primary, working, other) = classifiedColumns(List("t01", "t01", "t08", "t02"))
+    println(primary)
+    println(working)
+    println(other)
   }
 
 }
