@@ -13,23 +13,38 @@ import scala.util.Random
 @RunWith(classOf[JUnitRunner])
 class TimeUsageSuite extends FunSuite with BeforeAndAfterAll {
 
-  test("prototype") {
-    val resource = "/timeusage/atussum_100.csv"
+  test("scribble") {
+    val resource = "/timeusage/tiny.csv"
     val rdd = spark.sparkContext.textFile(fsPath(resource))
 
     val headerColumns = rdd.first().split(",").to[List]
 
-//    println(headerColumns)
+    println(headerColumns)
 
-    val schema = dfSchema(headerColumns)
+    val schema = dfSchema(headerColumns) // returns a StructType
+
+    println(schema)
 
     val data: RDD[String] = rdd.mapPartitionsWithIndex { (idx, iter) => if (idx == 0) iter.drop(1) else iter }
 
     // data.collect.foreach(println)
-    val (primary, working, other) = classifiedColumns(List("t01", "t01", "t08", "t02"))
-    println(primary)
-    println(working)
-    println(other)
+    val (primary, working, other) = classifiedColumns(headerColumns)
+//    println(primary)
+//    println(working)
+//    println(other)
+
+    val phonyData = List("first","1","234","666")
+    println(row(phonyData))
   }
 
+  test("prototype") {
+    val (columns, initDf) = read("/timeusage/tiny.csv")
+    val (primaryNeedsColumns, workColumns, otherColumns) = classifiedColumns(columns)
+
+    initDf.show()
+
+//    val summaryDf = timeUsageSummary(primaryNeedsColumns, workColumns, otherColumns, initDf)
+//
+//    summaryDf.show()
+  }
 }
