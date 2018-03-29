@@ -5,6 +5,8 @@ import java.nio.file.Paths
 import org.apache.spark.sql._
 import org.apache.spark.sql.types._
 
+import scala.collection.mutable
+
 /** Main class */
 object TimeUsage {
 
@@ -99,23 +101,35 @@ object TimeUsage {
     val working_prefixes = List("t05", "t1805")
     val other_prefixes = List("t02", "t04", "t06", "t07", "t08", "t09", "t10", "t12", "t13", "t14", "t15", "t16", "t18")
 
-    val primary = for {
-      c <- columnNames
-      p <- primary_prefixes
-      if c.startsWith(p)
-    } yield new Column(c)
+    var settaNames: Set[String] = columnNames.toSet
 
-    val working = for {
-      c <- columnNames
+    var primary_names = for {
+      p <- primary_prefixes
+      c <- settaNames
+      if c.startsWith(p)
+    } yield c
+
+    val primary = primary_names.map(new Column(_)).toList
+
+    settaNames = settaNames -- primary_names
+
+    val working_names = for {
+      c <- settaNames
       p <- working_prefixes
       if c.startsWith(p)
-    } yield new Column(c)
+    } yield c
 
-    val other = for {
-      c <- columnNames
+    val working = working_names.map(new Column(_)).toList
+
+    settaNames = settaNames -- working_names
+
+    val other_names = for {
+      c <- settaNames
       p <- other_prefixes
       if c.startsWith(p)
-    } yield new Column(c)
+    } yield c
+
+    val other = other_names.map(new Column(_)).toList
 
     return (primary, working, other)
   }

@@ -13,6 +13,15 @@ import scala.util.Random
 @RunWith(classOf[JUnitRunner])
 class TimeUsageSuite extends FunSuite with BeforeAndAfterAll {
 
+  test("classifiedColumns") {
+    var columns = List("t1801xxx", "t1802xxx", "t1803xxx", "t1804xxx", "t1805xxx", "t1806xxx")
+
+    val (primary, working, other) = classifiedColumns(columns)
+    println(s"primary = $primary")
+    println(s"working = $working")
+    println(s"other = $other")
+  }
+
   ignore("scribble") {
     val resource = "/timeusage/tiny.csv"
     val rdd = spark.sparkContext.textFile(fsPath(resource))
@@ -94,7 +103,7 @@ class TimeUsageSuite extends FunSuite with BeforeAndAfterAll {
     groupedDf.show()
   }
 
-  test("groupedDataset") {
+  ignore("groupedDataset") {
 //    +-----------+------+------+------------+----+-----+
 //    |    working|   sex|   age|primaryNeeds|work|other|
 //    +-----------+------+------+------------+----+-----+
