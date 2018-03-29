@@ -104,7 +104,13 @@ class TimeUsageSuite extends FunSuite with BeforeAndAfterAll {
 
     val summaryDS = timeUsageSummaryTyped(summaryDf)
 
-    summaryDS.show(20)
+//    summaryDS.show(20)
+
+//    summaryDS.printSchema()
+
+    val finalDS = timeUsageGroupedTyped(summaryDS)
+
+    finalDS.show(20)
   }
 
 }
