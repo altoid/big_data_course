@@ -261,9 +261,11 @@ object TimeUsage {
     // groupBy on a dataset gives us back a RelationalGroupedDataset whose aggregation operators will
     // return a DataFrame.  so don't do this.
     summed.groupByKey(r => (r.working, r.sex, r.age))
-        .agg(avg($"primaryNeeds").as[Double],
-          avg($"work").as[Double],
-          avg($"other").as[Double]).map(x => TimeUsageRow(x._1._1, x._1._2, x._1._3, x._2, x._3, x._4))
+      .agg(round(avg($"primaryNeeds"), 1).as[Double].name("primaryNeeds"),
+        round(avg($"work"), 1).as[Double].name("work"),
+        round(avg($"other"), 1).as[Double].name("other"))
+      .map(x => TimeUsageRow(x._1._1, x._1._2, x._1._3, x._2, x._3, x._4))
+      .orderBy($"working", $"sex", $"age")
   }
 }
 
