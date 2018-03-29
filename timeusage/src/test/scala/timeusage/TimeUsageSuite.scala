@@ -39,15 +39,55 @@ class TimeUsageSuite extends FunSuite with BeforeAndAfterAll {
     println(timeUsageGroupedSqlQuery("aeouoaeuae"))
   }
 
-  test("prototype") {
+  test("grouped") {
+//    +-----------+------+------+------------+----+-----+
+//    |    working|   sex|   age|primaryNeeds|work|other|
+//    +-----------+------+------+------------+----+-----+
+//    |not working|female|active|        14.6| 1.0|  8.4|
+//    |not working|female| young|        14.2| 0.0|  9.8|
+//    |not working|  male|active|        10.9| 0.0| 13.1|
+//    |not working|  male| young|        15.4| 0.0|  8.6|
+//    |    working|female|active|        11.8| 3.6|  8.9|
+//    |    working|female| elder|        13.6| 0.0| 10.2|
+//    |    working|female| young|        10.2| 4.5|  9.7|
+//    |    working|  male|active|        10.5| 6.4|  7.7|
+//    |    working|  male| elder|        10.5| 3.7| 10.2|
+//    |    working|  male| young|        14.3| 0.0|  9.7|
+//    +-----------+------+------+------------+----+-----+
+
     val (columns, initDf) = read("/timeusage/atussum_100.csv")
     val (primaryNeedsColumns, workColumns, otherColumns) = classifiedColumns(columns)
 
-//    initDf.show()
+    val summaryDf = timeUsageSummary(primaryNeedsColumns, workColumns, otherColumns, initDf)
+
+    val groupedDf = timeUsageGrouped(summaryDf)
+
+    groupedDf.show()
+  }
+
+  test("groupedSql") {
+//    +-----------+------+------+------------+----+-----+
+//    |    working|   sex|   age|primaryNeeds|work|other|
+//    +-----------+------+------+------------+----+-----+
+//    |not working|female|active|        14.6| 1.0|  8.4|
+//    |not working|female| young|        14.2| 0.0|  9.8|
+//    |not working|  male|active|        10.9| 0.0| 13.1|
+//    |not working|  male| young|        15.4| 0.0|  8.6|
+//    |    working|female|active|        11.8| 3.6|  8.9|
+//    |    working|female| elder|        13.6| 0.0| 10.2|
+//    |    working|female| young|        10.2| 4.5|  9.7|
+//    |    working|  male|active|        10.5| 6.4|  7.7|
+//    |    working|  male| elder|        10.5| 3.7| 10.2|
+//    |    working|  male| young|        14.3| 0.0|  9.7|
+//    +-----------+------+------+------------+----+-----+
+    val (columns, initDf) = read("/timeusage/atussum_100.csv")
+    val (primaryNeedsColumns, workColumns, otherColumns) = classifiedColumns(columns)
+
+    //    initDf.show()
 
     val summaryDf = timeUsageSummary(primaryNeedsColumns, workColumns, otherColumns, initDf)
 
-//    summaryDf.show()
+    //    summaryDf.show()
 
     val groupedDf = timeUsageGroupedSql(summaryDf)
 
