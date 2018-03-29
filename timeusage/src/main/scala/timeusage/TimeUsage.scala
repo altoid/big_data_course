@@ -237,7 +237,13 @@ object TimeUsage {
     *                           cast them at the same time.
     */
   def timeUsageSummaryTyped(timeUsageSummaryDf: DataFrame): Dataset[TimeUsageRow] =
-    ???
+    timeUsageSummaryDf.map(r => TimeUsageRow(r.getAs[String]("working"),
+      r.getAs[String]("sex"),
+      r.getAs[String]("age"),
+      r.getAs[Double]("primaryNeeds"),
+      r.getAs[Double]("work"),
+      r.getAs[Double]("other")))
+
 
   /**
     * @return Same as `timeUsageGrouped`, but using the typed API when possible

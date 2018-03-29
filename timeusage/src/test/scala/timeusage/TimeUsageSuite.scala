@@ -39,7 +39,7 @@ class TimeUsageSuite extends FunSuite with BeforeAndAfterAll {
     println(timeUsageGroupedSqlQuery("aeouoaeuae"))
   }
 
-  test("grouped") {
+  ignore("grouped") {
 //    +-----------+------+------+------------+----+-----+
 //    |    working|   sex|   age|primaryNeeds|work|other|
 //    +-----------+------+------+------------+----+-----+
@@ -65,7 +65,7 @@ class TimeUsageSuite extends FunSuite with BeforeAndAfterAll {
     groupedDf.show()
   }
 
-  test("groupedSql") {
+  ignore("groupedSql") {
 //    +-----------+------+------+------------+----+-----+
 //    |    working|   sex|   age|primaryNeeds|work|other|
 //    +-----------+------+------+------------+----+-----+
@@ -93,4 +93,18 @@ class TimeUsageSuite extends FunSuite with BeforeAndAfterAll {
 
     groupedDf.show()
   }
+
+  test("groupedDataset") {
+    val (columns, initDf) = read("/timeusage/atussum_100.csv")
+    val (primaryNeedsColumns, workColumns, otherColumns) = classifiedColumns(columns)
+
+    val summaryDf = timeUsageSummary(primaryNeedsColumns, workColumns, otherColumns, initDf)
+
+    // turn this into a data set
+
+    val summaryDS = timeUsageSummaryTyped(summaryDf)
+
+    summaryDS.show(20)
+  }
+
 }
